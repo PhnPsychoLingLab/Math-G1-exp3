@@ -11,7 +11,6 @@ let expInfo = {
 };
 
 // Start code blocks for 'Before Experiment'
-var mic;
 // init psychoJS:
 const psychoJS = new PsychoJS({
   debug: true
@@ -112,7 +111,6 @@ async function updateInfo() {
 
 
 var loadingClock;
-var mic_perms_text_string;
 var helloClock;
 var hello_np;
 var hello_bg;
@@ -120,7 +118,6 @@ var exp3_introClock;
 var exp3_intro_np;
 var exp3_intro_bg;
 var exp3_preClock;
-var mic;
 var exp3_pre_bg;
 var next_page;
 var nextQClock;
@@ -132,42 +129,6 @@ var routineTimer;
 async function experimentInit() {
   // Initialize components for Routine "loading"
   loadingClock = new util.Clock();
-  // Run 'Begin Experiment' code from code
-  mic_perms_text_string = "Please grant permission to access your microphone if asked.\n\nThen, press space to continue.";
-  
-  // If browser supports getUserMedia(), request 
-  // microphone permissions
-  
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    console.log("getUserMedia supported.");
-    navigator.mediaDevices
-      .getUserMedia(
-        // constraints - only audio needed for this app
-        {
-          audio: true,
-          video: false,
-        }
-      )
-  
-      // Success callback
-      .then((stream) => {
-          mic_perms_text_string = "Please grant permission to access your microphone if asked.\n\nThen, press space to continue.";
-          console.log("ACTIVE?");
-          console.log(stream.active);
-              if (stream.active) {
-                  continueRoutine = false;
-              }
-          })
-  
-      // Error callback
-      .catch((err) => {
-        console.error(`The following getUserMedia error occurred: ${err}`);
-        mic_perms_text_string = "Microphone access has been denied. Please refresh the page and grant permission to access your microphone.";
-      });
-  } else {
-    console.log("getUserMedia not supported on your browser!");
-    mic_perms_text_string = "Sorry, it seems your browser isn't supported.  Please try a different browser.";
-  }
   // Initialize components for Routine "hello"
   helloClock = new util.Clock();
   hello_np = new visual.ButtonStim({
@@ -234,17 +195,6 @@ async function experimentInit() {
   });
   // Initialize components for Routine "exp3_pre"
   exp3_preClock = new util.Clock();
-  // Run 'Begin Experiment' code from mic_code
-    mic = new sound.Microphone({
-      win : psychoJS.window, 
-      name:'mic',
-      sampleRateHz : 44100,
-      format: "audio/wav",
-      channels : 'mono',
-      maxRecordingSize : 24000.0,
-      loopback : true,
-      policyWhenFull : 'ignore',
-    });
   exp3_pre_bg = new visual.ImageStim({
     win : psychoJS.window,
     name : 'exp3_pre_bg', units : undefined, 
@@ -316,6 +266,7 @@ var t;
 var frameN;
 var continueRoutine;
 var loadingMaxDurationReached;
+var mic_perms_text_string;
 var loadingMaxDuration;
 var loadingComponents;
 function loadingRoutineBegin(snapshot) {
@@ -330,6 +281,36 @@ function loadingRoutineBegin(snapshot) {
     routineTimer.reset();
     loadingMaxDurationReached = false;
     // update component parameters for each repeat
+    mic_perms_text_string = "Please grant permission to access your microphone if asked.\n\nThen, press space to continue.";
+    
+    // If browser supports getUserMedia(), request
+    // microphone permissions
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      console.log("getUserMedia supported.");
+      navigator.mediaDevices
+        .getUserMedia({
+          // constraints - only audio needed for this app
+          audio: true,
+          video: false,
+        })
+        // Success callback
+        .then((stream) => {
+          mic_perms_text_string = "Please grant permission to access your microphone if asked.\n\nThen, press space to continue.";
+          console.log("ACTIVE?");
+          console.log(stream.active);
+          if (stream.active) {
+            continueRoutine = false;
+          }
+        })
+        // Error callback
+        .catch((err) => {
+          console.error(`The following getUserMedia error occurred: ${err}`);
+          mic_perms_text_string = "Microphone access has been denied. Please refresh the page and grant permission to use the microphone.";
+        });
+    } else {
+      console.log("getUserMedia not supported on your browser!");
+      mic_perms_text_string = "Sorry, it seems your browser isn't supported. Please try a different browser.";
+    }
     psychoJS.experiment.addData('loading.started', globalClock.getTime());
     loadingMaxDuration = null
     // keep track of which components have finished
@@ -747,6 +728,7 @@ function exp3_pre_trialsLoopEndIteration(scheduler, snapshot) {
 
 
 var exp3_preMaxDurationReached;
+var mic;
 var exp3_preMaxDuration;
 var exp3_preComponents;
 function exp3_preRoutineBegin(snapshot) {
@@ -761,6 +743,30 @@ function exp3_preRoutineBegin(snapshot) {
     routineTimer.reset();
     exp3_preMaxDurationReached = false;
     // update component parameters for each repeat
+    // 初始化麥克風（如果尚未初始化）
+    if (typeof mic === 'undefined') {
+      mic = new sound.Microphone({
+        win: psychoJS.window,
+        name: 'mic',
+        sampleRateHz: 44100,
+        format: "audio/wav",
+        channels: 'mono',
+        maxRecordingSize: 24000.0,
+        loopback: true,
+        policyWhenFull: 'ignore',
+      });
+      console.log("麥克風初始化完成");
+    }
+    
+    // 開始錄音
+    if (mic.status != STARTED) {
+      try {
+        await mic.start();
+        console.log("開始錄音...");
+      } catch (error) {
+        console.error("麥克風啟動失敗:", error);
+      }
+    }
     exp3_pre_bg.setImage(exp3_pre_stimuli);
     // reset next_page to account for continued clicks & clear times on/off
     next_page.reset()
@@ -787,9 +793,6 @@ function exp3_preRoutineEachFrame() {
     t = exp3_preClock.getTime();
     frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
     // update/draw components on each frame
-    if (mic.status != STARTED) {
-        await mic.start();
-    }
     
     // *exp3_pre_bg* updates
     if (t >= 0.0 && exp3_pre_bg.status === PsychoJS.Status.NOT_STARTED) {
@@ -866,7 +869,6 @@ function exp3_preRoutineEachFrame() {
 }
 
 
-var thisFilename;
 function exp3_preRoutineEnd(snapshot) {
   return async function () {
     //--- Ending Routine 'exp3_pre' ---
@@ -875,25 +877,6 @@ function exp3_preRoutineEnd(snapshot) {
         thisComponent.setAutoDraw(false);
       }
     });
-    // stop the microphone (make the audio data ready for upload)
-    await mic.stop();
-    
-    // construct a filename for this recording
-    thisFilename = 'recording_' +
-                    expName + "_" +
-                    expInfo["participant"] + "_" +
-                    "item_" + String(exp3_main_stimuli) +
-                    '_' + String(Date.now()); // add epoch timestamp so no overwriting
-    
-    // get the recording
-    mic.lastClip = await mic.getRecording({
-      tag: thisFilename,
-      flush: false
-    });
-    
-    psychoJS.experiment.addData('mic.clip', thisFilename + ".wav");
-    // start the asynchronous upload to the server
-    mic.lastClip.upload();
     psychoJS.experiment.addData('exp3_pre.stopped', globalClock.getTime());
     psychoJS.experiment.addData('next_page.numClicks', next_page.numClicks);
     psychoJS.experiment.addData('next_page.timesOn', next_page.timesOn);
@@ -925,6 +908,67 @@ function nextQRoutineBegin(snapshot) {
     routineTimer.add(0.500000);
     nextQMaxDurationReached = false;
     // update component parameters for each repeat
+    try {
+      // 停止麥克風並處理錄音
+      await mic.stop();
+      console.log("停止錄音...");
+    
+      // 構建此次錄音的檔案名稱
+      const thisFilename = 'recording_' + 
+        expName + "_" + 
+        expInfo["participant"] + "_" + 
+        "trial_" + psychoJS.experiment.thisN + "_" + 
+        "item_" + String(exp3_main_stimuli) + 
+        '_' + String(Date.now()) + ".wav";
+    
+      // 獲取錄音
+      mic.lastClip = await mic.getRecording({
+        tag: thisFilename,
+        flush: false
+      });
+    
+      // 將音訊檔案名稱添加到實驗數據中
+      psychoJS.experiment.addData('mic.clip', thisFilename);
+    
+      // 獲取音訊數據並轉換為Base64
+      const audioDataURL = mic.lastClip.getBlobURL();
+      
+      // 從DataURL中提取Base64數據
+      const base64Data = audioDataURL.split(',')[1];
+      
+      // 通過DataPipe將音訊發送到OSF
+      console.log('正在上傳音訊到OSF...');
+      
+      // 使用await等待上傳完成
+      await fetch('https://pipe.jspsych.org/api/data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: '*/*',
+        },
+        body: JSON.stringify({
+          experimentID: 'zqejJsvNSVAI', // 您的DataPipe實驗ID
+          filename: thisFilename,
+          data: base64Data,
+          datatype: 'audio/wav'
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('音訊上傳成功:', data);
+      })
+      .catch(error => {
+        console.error('音訊上傳失敗:', error);
+      });
+      
+      // 為下一個trial重新啟動麥克風
+      await mic.start();
+      
+      // 可選：手動結束當前routine
+      // continueRoutine = false;
+    } catch (error) {
+      console.error("處理音訊時出錯:", error);
+    }
     psychoJS.experiment.addData('nextQ.started', globalClock.getTime());
     nextQMaxDuration = null
     // keep track of which components have finished
@@ -1028,38 +1072,60 @@ function exitRoutineBegin(snapshot) {
     routineTimer.reset();
     exitMaxDurationReached = false;
     // update component parameters for each repeat
-    // Disable downloading results to browser
-    psychoJS._saveResults = 0; 
+    // 處理最後一次可能的錄音
+    try {
+      if (typeof mic !== 'undefined' && mic) {
+        await mic.stop();
+        console.log("停止最終錄音...");
     
-    // Generate filename for results
-    let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._participant + '_' + psychoJS._experiment._datetime + '.csv';
+        // 只有在有活躍錄音時才獲取錄音
+        if (mic.isRecording || mic.status === FINISHED) {
+          const finalFilename = 'recording_' + 
+            expName + "_" + 
+            psychoJS._experiment._participant + "_" + 
+            "final_" + String(Date.now()) + ".wav";
     
-    // Extract data object from experiment
-    let dataObj = psychoJS._experiment._trialsData;
+          mic.lastClip = await mic.getRecording({
+            tag: finalFilename,
+            flush: false
+          });
     
-    // Convert data object to CSV
-    let data = [Object.keys(dataObj[0])].concat(dataObj).map(it => {
-        return Object.values(it).toString()
-    }).join('\n')
-    
-    // Send data to OSF via DataPipe
-    console.log('Saving data...');
-    fetch('https://pipe.jspsych.org/api/data', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: '*/*',
-        },
-        body: JSON.stringify({
-            experimentID: 'zqejJsvNSVAI', // ⭑ UPDATE WITH YOUR DATAPIPE EXPERIMENT ID ⭑
-            filename: filename,
-            data: data,
-        }),
-    }).then(response => response.json()).then(data => {
-        // Log response and force experiment end
-        console.log(data);
-        quitPsychoJS();
-    })
+          psychoJS.experiment.addData('final_mic.clip', finalFilename);
+          
+          // 獲取音訊數據並轉換為Base64
+          const audioDataURL = mic.lastClip.getBlobURL();
+          
+          // 從DataURL中提取Base64數據
+          const base64Data = audioDataURL.split(',')[1];
+          
+          // 通過DataPipe將音訊發送到OSF
+          console.log('正在上傳最終音訊到OSF...');
+          
+          await fetch('https://pipe.jspsych.org/api/data', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: '*/*',
+            },
+            body: JSON.stringify({
+              experimentID: 'zqejJsvNSVAI', // 您的DataPipe實驗ID
+              filename: finalFilename,
+              data: base64Data,
+              datatype: 'audio/wav'
+            }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('最終音訊上傳成功:', data);
+          })
+          .catch(error => {
+            console.error('最終音訊上傳失敗:', error);
+          });
+        }
+      }
+    } catch (error) {
+      console.error("處理最終錄音時出錯:", error);
+    }
     psychoJS.experiment.addData('exit.started', globalClock.getTime());
     exitMaxDuration = null
     // keep track of which components have finished
