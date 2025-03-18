@@ -46,6 +46,9 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 // flowScheduler gets run if the participants presses OK
 flowScheduler.add(updateInfo); // add timeStamp
 flowScheduler.add(experimentInit);
+flowScheduler.add(loadingRoutineBegin());
+flowScheduler.add(loadingRoutineEachFrame());
+flowScheduler.add(loadingRoutineEnd());
 flowScheduler.add(helloRoutineBegin());
 flowScheduler.add(helloRoutineEachFrame());
 flowScheduler.add(helloRoutineEnd());
@@ -115,6 +118,8 @@ async function updateInfo() {
 }
 
 
+var loadingClock;
+var mic_perms_text_string;
 var helloClock;
 var hello_np;
 var hello_bg;
@@ -131,6 +136,44 @@ var wait;
 var globalClock;
 var routineTimer;
 async function experimentInit() {
+  // Initialize components for Routine "loading"
+  loadingClock = new util.Clock();
+  // Run 'Begin Experiment' code from code
+  mic_perms_text_string = "Please grant permission to access your microphone if asked.\n\nThen, press space to continue.";
+  
+  // If browser supports getUserMedia(), request 
+  // microphone permissions
+  
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    console.log("getUserMedia supported.");
+    navigator.mediaDevices
+      .getUserMedia(
+        // constraints - only audio needed for this app
+        {
+          audio: true,
+          video: false,
+        }
+      )
+  
+      // Success callback
+      .then((stream) => {
+          mic_perms_text_string = "Please grant permission to access your microphone if asked.\n\nThen, press space to continue.";
+          console.log("ACTIVE?");
+          console.log(stream.active);
+              if (stream.active) {
+                  continueRoutine = false;
+              }
+          })
+  
+      // Error callback
+      .catch((err) => {
+        console.error(`The following getUserMedia error occurred: ${err}`);
+        mic_perms_text_string = "Microphone access has been denied. Please refresh the page and grant permission to access your microphone.";
+      });
+  } else {
+    console.log("getUserMedia not supported on your browser!");
+    mic_perms_text_string = "Sorry, it seems your browser isn't supported.  Please try a different browser.";
+  }
   // Initialize components for Routine "hello"
   helloClock = new util.Clock();
   hello_np = new visual.ButtonStim({
@@ -267,6 +310,89 @@ async function experimentInit() {
 var t;
 var frameN;
 var continueRoutine;
+var loadingMaxDurationReached;
+var loadingMaxDuration;
+var loadingComponents;
+function loadingRoutineBegin(snapshot) {
+  return async function () {
+    TrialHandler.fromSnapshot(snapshot); // ensure that .thisN vals are up to date
+    
+    //--- Prepare to start Routine 'loading' ---
+    t = 0;
+    frameN = -1;
+    continueRoutine = true; // until we're told otherwise
+    loadingClock.reset();
+    routineTimer.reset();
+    loadingMaxDurationReached = false;
+    // update component parameters for each repeat
+    psychoJS.experiment.addData('loading.started', globalClock.getTime());
+    loadingMaxDuration = null
+    // keep track of which components have finished
+    loadingComponents = [];
+    
+    for (const thisComponent of loadingComponents)
+      if ('status' in thisComponent)
+        thisComponent.status = PsychoJS.Status.NOT_STARTED;
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
+function loadingRoutineEachFrame() {
+  return async function () {
+    //--- Loop for each frame of Routine 'loading' ---
+    // get current time
+    t = loadingClock.getTime();
+    frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
+    // update/draw components on each frame
+    // check for quit (typically the Esc key)
+    if (psychoJS.experiment.experimentEnded || psychoJS.eventManager.getKeys({keyList:['escape']}).length > 0) {
+      return quitPsychoJS('The [Escape] key was pressed. Goodbye!', false);
+    }
+    
+    // check if the Routine should terminate
+    if (!continueRoutine) {  // a component has requested a forced-end of Routine
+      return Scheduler.Event.NEXT;
+    }
+    
+    continueRoutine = false;  // reverts to True if at least one component still running
+    for (const thisComponent of loadingComponents)
+      if ('status' in thisComponent && thisComponent.status !== PsychoJS.Status.FINISHED) {
+        continueRoutine = true;
+        break;
+      }
+    
+    // refresh the screen if continuing
+    if (continueRoutine) {
+      return Scheduler.Event.FLIP_REPEAT;
+    } else {
+      return Scheduler.Event.NEXT;
+    }
+  };
+}
+
+
+function loadingRoutineEnd(snapshot) {
+  return async function () {
+    //--- Ending Routine 'loading' ---
+    for (const thisComponent of loadingComponents) {
+      if (typeof thisComponent.setAutoDraw === 'function') {
+        thisComponent.setAutoDraw(false);
+      }
+    }
+    psychoJS.experiment.addData('loading.stopped', globalClock.getTime());
+    // the Routine "loading" was not non-slip safe, so reset the non-slip timer
+    routineTimer.reset();
+    
+    // Routines running outside a loop should always advance the datafile row
+    if (currentLoop === psychoJS.experiment) {
+      psychoJS.experiment.nextEntry(snapshot);
+    }
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
 var helloMaxDurationReached;
 var helloMaxDuration;
 var helloComponents;
