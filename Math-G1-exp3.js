@@ -52,6 +52,13 @@ flowScheduler.add(helloRoutineEnd());
 flowScheduler.add(exp3_introRoutineBegin());
 flowScheduler.add(exp3_introRoutineEachFrame());
 flowScheduler.add(exp3_introRoutineEnd());
+const exp3_pre_trialsLoopScheduler = new Scheduler(psychoJS);
+flowScheduler.add(exp3_pre_trialsLoopBegin(exp3_pre_trialsLoopScheduler));
+flowScheduler.add(exp3_pre_trialsLoopScheduler);
+flowScheduler.add(exp3_pre_trialsLoopEnd);
+
+
+
 flowScheduler.add(exitRoutineBegin());
 flowScheduler.add(exitRoutineEachFrame());
 flowScheduler.add(exitRoutineEnd());
@@ -65,8 +72,13 @@ psychoJS.start({
   expInfo: expInfo,
   resources: [
     // resources:
+    {'name': 'pre_exp3.csv', 'path': 'pre_exp3.csv'},
+    {'name': './exp3_pre/G1_exp3_pre1.png', 'path': './exp3_pre/G1_exp3_pre1.png'},
+    {'name': './exp3_pre/G1_exp3_pre2.png', 'path': './exp3_pre/G1_exp3_pre2.png'},
     {'name': 'page/homepage.png', 'path': 'page/homepage.png'},
     {'name': 'page/G1_exp3_intro.png', 'path': 'page/G1_exp3_intro.png'},
+    {'name': 'default.png', 'path': 'https://pavlovia.org/assets/default/default.png'},
+    {'name': 'page/nextQ.png', 'path': 'page/nextQ.png'},
   ]
 });
 
@@ -109,6 +121,11 @@ var hello_bg;
 var exp3_introClock;
 var exp3_intro_np;
 var exp3_intro_bg;
+var exp3_preClock;
+var exp3_pre_bg;
+var next_page;
+var nextQClock;
+var nextQ_bg;
 var exitClock;
 var wait;
 var globalClock;
@@ -177,6 +194,53 @@ async function experimentInit() {
     color : new util.Color([1,1,1]), opacity : undefined,
     flipHoriz : false, flipVert : false,
     texRes : 128.0, interpolate : true, depth : -1.0 
+  });
+  // Initialize components for Routine "exp3_pre"
+  exp3_preClock = new util.Clock();
+  exp3_pre_bg = new visual.ImageStim({
+    win : psychoJS.window,
+    name : 'exp3_pre_bg', units : undefined, 
+    image : 'default.png', mask : undefined,
+    anchor : 'center',
+    ori : 0.0, 
+    pos : [0, 0], 
+    draggable: false,
+    size : [1.344, 0.756],
+    color : new util.Color([1,1,1]), opacity : undefined,
+    flipHoriz : false, flipVert : false,
+    texRes : 128.0, interpolate : true, depth : 0.0 
+  });
+  next_page = new visual.ButtonStim({
+    win: psychoJS.window,
+    name: 'next_page',
+    text: '⮕',
+    fillColor: 'darkgrey',
+    borderColor: null,
+    color: 'white',
+    colorSpace: 'rgb',
+    pos: [0, 0],
+    letterHeight: 0.07,
+    size: [0.3, 0.3],
+    ori: 0.0
+    ,
+    depth: -1
+  });
+  next_page.clock = new util.Clock();
+  
+  // Initialize components for Routine "nextQ"
+  nextQClock = new util.Clock();
+  nextQ_bg = new visual.ImageStim({
+    win : psychoJS.window,
+    name : 'nextQ_bg', units : undefined, 
+    image : 'page/nextQ.png', mask : undefined,
+    anchor : 'center',
+    ori : 0.0, 
+    pos : [0, 0], 
+    draggable: false,
+    size : [1.344, 0.756],
+    color : new util.Color([1,1,1]), opacity : undefined,
+    flipHoriz : false, flipVert : false,
+    texRes : 128.0, interpolate : true, depth : 0.0 
   });
   // Initialize components for Routine "exit"
   exitClock = new util.Clock();
@@ -481,6 +545,314 @@ function exp3_introRoutineEnd(snapshot) {
 }
 
 
+var exp3_pre_trials;
+function exp3_pre_trialsLoopBegin(exp3_pre_trialsLoopScheduler, snapshot) {
+  return async function() {
+    TrialHandler.fromSnapshot(snapshot); // update internal variables (.thisN etc) of the loop
+    
+    // set up handler to look after randomisation of conditions etc
+    exp3_pre_trials = new TrialHandler({
+      psychoJS: psychoJS,
+      nReps: 1, method: TrialHandler.Method.RANDOM,
+      extraInfo: expInfo, originPath: undefined,
+      trialList: 'pre_exp3.csv',
+      seed: undefined, name: 'exp3_pre_trials'
+    });
+    psychoJS.experiment.addLoop(exp3_pre_trials); // add the loop to the experiment
+    currentLoop = exp3_pre_trials;  // we're now the current loop
+    
+    // Schedule all the trials in the trialList:
+    for (const thisExp3_pre_trial of exp3_pre_trials) {
+      snapshot = exp3_pre_trials.getSnapshot();
+      exp3_pre_trialsLoopScheduler.add(importConditions(snapshot));
+      exp3_pre_trialsLoopScheduler.add(exp3_preRoutineBegin(snapshot));
+      exp3_pre_trialsLoopScheduler.add(exp3_preRoutineEachFrame());
+      exp3_pre_trialsLoopScheduler.add(exp3_preRoutineEnd(snapshot));
+      exp3_pre_trialsLoopScheduler.add(nextQRoutineBegin(snapshot));
+      exp3_pre_trialsLoopScheduler.add(nextQRoutineEachFrame());
+      exp3_pre_trialsLoopScheduler.add(nextQRoutineEnd(snapshot));
+      exp3_pre_trialsLoopScheduler.add(exp3_pre_trialsLoopEndIteration(exp3_pre_trialsLoopScheduler, snapshot));
+    }
+    
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
+async function exp3_pre_trialsLoopEnd() {
+  // terminate loop
+  psychoJS.experiment.removeLoop(exp3_pre_trials);
+  // update the current loop from the ExperimentHandler
+  if (psychoJS.experiment._unfinishedLoops.length>0)
+    currentLoop = psychoJS.experiment._unfinishedLoops.at(-1);
+  else
+    currentLoop = psychoJS.experiment;  // so we use addData from the experiment
+  return Scheduler.Event.NEXT;
+}
+
+
+function exp3_pre_trialsLoopEndIteration(scheduler, snapshot) {
+  // ------Prepare for next entry------
+  return async function () {
+    if (typeof snapshot !== 'undefined') {
+      // ------Check if user ended loop early------
+      if (snapshot.finished) {
+        // Check for and save orphaned data
+        if (psychoJS.experiment.isEntryEmpty()) {
+          psychoJS.experiment.nextEntry(snapshot);
+        }
+        scheduler.stop();
+      } else {
+        psychoJS.experiment.nextEntry(snapshot);
+      }
+    return Scheduler.Event.NEXT;
+    }
+  };
+}
+
+
+var exp3_preMaxDurationReached;
+var exp3_preMaxDuration;
+var exp3_preComponents;
+function exp3_preRoutineBegin(snapshot) {
+  return async function () {
+    TrialHandler.fromSnapshot(snapshot); // ensure that .thisN vals are up to date
+    
+    //--- Prepare to start Routine 'exp3_pre' ---
+    t = 0;
+    frameN = -1;
+    continueRoutine = true; // until we're told otherwise
+    exp3_preClock.reset();
+    routineTimer.reset();
+    exp3_preMaxDurationReached = false;
+    // update component parameters for each repeat
+    exp3_pre_bg.setImage(exp3_pre_stimuli);
+    // reset next_page to account for continued clicks & clear times on/off
+    next_page.reset()
+    psychoJS.experiment.addData('exp3_pre.started', globalClock.getTime());
+    exp3_preMaxDuration = null
+    // keep track of which components have finished
+    exp3_preComponents = [];
+    exp3_preComponents.push(exp3_pre_bg);
+    exp3_preComponents.push(next_page);
+    
+    for (const thisComponent of exp3_preComponents)
+      if ('status' in thisComponent)
+        thisComponent.status = PsychoJS.Status.NOT_STARTED;
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
+function exp3_preRoutineEachFrame() {
+  return async function () {
+    //--- Loop for each frame of Routine 'exp3_pre' ---
+    // get current time
+    t = exp3_preClock.getTime();
+    frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
+    // update/draw components on each frame
+    
+    // *exp3_pre_bg* updates
+    if (t >= 0.0 && exp3_pre_bg.status === PsychoJS.Status.NOT_STARTED) {
+      // keep track of start time/frame for later
+      exp3_pre_bg.tStart = t;  // (not accounting for frame time here)
+      exp3_pre_bg.frameNStart = frameN;  // exact frame index
+      
+      exp3_pre_bg.setAutoDraw(true);
+    }
+    
+    
+    // *next_page* updates
+    if (t >= 5 && next_page.status === PsychoJS.Status.NOT_STARTED) {
+      // keep track of start time/frame for later
+      next_page.tStart = t;  // (not accounting for frame time here)
+      next_page.frameNStart = frameN;  // exact frame index
+      
+      next_page.setAutoDraw(true);
+    }
+    
+    if (next_page.status === PsychoJS.Status.STARTED) {
+      // check whether next_page has been pressed
+      if (next_page.isClicked) {
+        if (!next_page.wasClicked) {
+          // store time of first click
+          next_page.timesOn.push(next_page.clock.getTime());
+          // store time clicked until
+          next_page.timesOff.push(next_page.clock.getTime());
+        } else {
+          // update time clicked until;
+          next_page.timesOff[next_page.timesOff.length - 1] = next_page.clock.getTime();
+        }
+        if (!next_page.wasClicked) {
+          // end routine when next_page is clicked
+          continueRoutine = false;
+          
+        }
+        // if next_page is still clicked next frame, it is not a new click
+        next_page.wasClicked = true;
+      } else {
+        // if next_page is clicked next frame, it is a new click
+        next_page.wasClicked = false;
+      }
+    } else {
+      // keep clock at 0 if next_page hasn't started / has finished
+      next_page.clock.reset();
+      // if next_page is clicked next frame, it is a new click
+      next_page.wasClicked = false;
+    }
+    // check for quit (typically the Esc key)
+    if (psychoJS.experiment.experimentEnded || psychoJS.eventManager.getKeys({keyList:['escape']}).length > 0) {
+      return quitPsychoJS('The [Escape] key was pressed. Goodbye!', false);
+    }
+    
+    // check if the Routine should terminate
+    if (!continueRoutine) {  // a component has requested a forced-end of Routine
+      return Scheduler.Event.NEXT;
+    }
+    
+    continueRoutine = false;  // reverts to True if at least one component still running
+    for (const thisComponent of exp3_preComponents)
+      if ('status' in thisComponent && thisComponent.status !== PsychoJS.Status.FINISHED) {
+        continueRoutine = true;
+        break;
+      }
+    
+    // refresh the screen if continuing
+    if (continueRoutine) {
+      return Scheduler.Event.FLIP_REPEAT;
+    } else {
+      return Scheduler.Event.NEXT;
+    }
+  };
+}
+
+
+function exp3_preRoutineEnd(snapshot) {
+  return async function () {
+    //--- Ending Routine 'exp3_pre' ---
+    for (const thisComponent of exp3_preComponents) {
+      if (typeof thisComponent.setAutoDraw === 'function') {
+        thisComponent.setAutoDraw(false);
+      }
+    }
+    psychoJS.experiment.addData('exp3_pre.stopped', globalClock.getTime());
+    psychoJS.experiment.addData('next_page.numClicks', next_page.numClicks);
+    psychoJS.experiment.addData('next_page.timesOn', next_page.timesOn);
+    psychoJS.experiment.addData('next_page.timesOff', next_page.timesOff);
+    // the Routine "exp3_pre" was not non-slip safe, so reset the non-slip timer
+    routineTimer.reset();
+    
+    // Routines running outside a loop should always advance the datafile row
+    if (currentLoop === psychoJS.experiment) {
+      psychoJS.experiment.nextEntry(snapshot);
+    }
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
+var nextQMaxDurationReached;
+var nextQMaxDuration;
+var nextQComponents;
+function nextQRoutineBegin(snapshot) {
+  return async function () {
+    TrialHandler.fromSnapshot(snapshot); // ensure that .thisN vals are up to date
+    
+    //--- Prepare to start Routine 'nextQ' ---
+    t = 0;
+    frameN = -1;
+    continueRoutine = true; // until we're told otherwise
+    nextQClock.reset(routineTimer.getTime());
+    routineTimer.add(0.500000);
+    nextQMaxDurationReached = false;
+    // update component parameters for each repeat
+    psychoJS.experiment.addData('nextQ.started', globalClock.getTime());
+    nextQMaxDuration = null
+    // keep track of which components have finished
+    nextQComponents = [];
+    nextQComponents.push(nextQ_bg);
+    
+    for (const thisComponent of nextQComponents)
+      if ('status' in thisComponent)
+        thisComponent.status = PsychoJS.Status.NOT_STARTED;
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
+var frameRemains;
+function nextQRoutineEachFrame() {
+  return async function () {
+    //--- Loop for each frame of Routine 'nextQ' ---
+    // get current time
+    t = nextQClock.getTime();
+    frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
+    // update/draw components on each frame
+    
+    // *nextQ_bg* updates
+    if (t >= 0.0 && nextQ_bg.status === PsychoJS.Status.NOT_STARTED) {
+      // keep track of start time/frame for later
+      nextQ_bg.tStart = t;  // (not accounting for frame time here)
+      nextQ_bg.frameNStart = frameN;  // exact frame index
+      
+      nextQ_bg.setAutoDraw(true);
+    }
+    
+    frameRemains = 0.0 + 0.5 - psychoJS.window.monitorFramePeriod * 0.75;// most of one frame period left
+    if (nextQ_bg.status === PsychoJS.Status.STARTED && t >= frameRemains) {
+      nextQ_bg.setAutoDraw(false);
+    }
+    
+    // check for quit (typically the Esc key)
+    if (psychoJS.experiment.experimentEnded || psychoJS.eventManager.getKeys({keyList:['escape']}).length > 0) {
+      return quitPsychoJS('The [Escape] key was pressed. Goodbye!', false);
+    }
+    
+    // check if the Routine should terminate
+    if (!continueRoutine) {  // a component has requested a forced-end of Routine
+      return Scheduler.Event.NEXT;
+    }
+    
+    continueRoutine = false;  // reverts to True if at least one component still running
+    for (const thisComponent of nextQComponents)
+      if ('status' in thisComponent && thisComponent.status !== PsychoJS.Status.FINISHED) {
+        continueRoutine = true;
+        break;
+      }
+    
+    // refresh the screen if continuing
+    if (continueRoutine && routineTimer.getTime() > 0) {
+      return Scheduler.Event.FLIP_REPEAT;
+    } else {
+      return Scheduler.Event.NEXT;
+    }
+  };
+}
+
+
+function nextQRoutineEnd(snapshot) {
+  return async function () {
+    //--- Ending Routine 'nextQ' ---
+    for (const thisComponent of nextQComponents) {
+      if (typeof thisComponent.setAutoDraw === 'function') {
+        thisComponent.setAutoDraw(false);
+      }
+    }
+    psychoJS.experiment.addData('nextQ.stopped', globalClock.getTime());
+    if (nextQMaxDurationReached) {
+        nextQClock.add(nextQMaxDuration);
+    } else {
+        nextQClock.add(0.500000);
+    }
+    // Routines running outside a loop should always advance the datafile row
+    if (currentLoop === psychoJS.experiment) {
+      psychoJS.experiment.nextEntry(snapshot);
+    }
+    return Scheduler.Event.NEXT;
+  }
+}
+
+
 var exitMaxDurationReached;
 var exitMaxDuration;
 var exitComponents;
@@ -500,7 +872,7 @@ function exitRoutineBegin(snapshot) {
     psychoJS._saveResults = 0; 
     
     // Generate filename for results
-    let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._datetime + '.csv';
+    let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._participant + '_' + psychoJS._experiment._datetime + '.csv';
     
     // Extract data object from experiment
     let dataObj = psychoJS._experiment._trialsData;
