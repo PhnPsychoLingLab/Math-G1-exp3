@@ -918,7 +918,7 @@ function nextQRoutineBegin(snapshot) {
         expName + "_" + 
         expInfo["participant"] + "_" + 
         "trial_" + psychoJS.experiment.thisN + "_" + 
-        "item_" + String(exp3_main_stimuli) + 
+        "item_" + String(exp3_pre_stimuli) + 
         '_' + String(Date.now()) + ".wav";
     
       // 獲取錄音
