@@ -19,6 +19,7 @@ let expInfo = {
 };
 
 // Start code blocks for 'Before Experiment'
+var mic;
 // init psychoJS:
 const psychoJS = new PsychoJS({
   debug: true
@@ -127,6 +128,7 @@ var exp3_introClock;
 var exp3_intro_np;
 var exp3_intro_bg;
 var exp3_preClock;
+var mic;
 var exp3_pre_bg;
 var next_page;
 var nextQClock;
@@ -240,6 +242,17 @@ async function experimentInit() {
   });
   // Initialize components for Routine "exp3_pre"
   exp3_preClock = new util.Clock();
+  // Run 'Begin Experiment' code from mic_code
+    mic = new sound.Microphone({
+      win : psychoJS.window, 
+      name:'mic',
+      sampleRateHz : 44100,
+      format: "audio/wav",
+      channels : 'mono',
+      maxRecordingSize : 24000.0,
+      loopback : true,
+      policyWhenFull : 'ignore',
+    });
   exp3_pre_bg = new visual.ImageStim({
     win : psychoJS.window,
     name : 'exp3_pre_bg', units : undefined, 
@@ -251,7 +264,7 @@ async function experimentInit() {
     size : [1.344, 0.756],
     color : new util.Color([1,1,1]), opacity : undefined,
     flipHoriz : false, flipVert : false,
-    texRes : 128.0, interpolate : true, depth : 0.0 
+    texRes : 128.0, interpolate : true, depth : -1.0 
   });
   next_page = new visual.ButtonStim({
     win: psychoJS.window,
@@ -266,7 +279,7 @@ async function experimentInit() {
     size: [0.3, 0.3],
     ori: 0.0
     ,
-    depth: -1
+    depth: -2
   });
   next_page.clock = new util.Clock();
   
@@ -777,6 +790,9 @@ function exp3_preRoutineEachFrame() {
     t = exp3_preClock.getTime();
     frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
     // update/draw components on each frame
+    if (mic.status != STARTED) {
+        await mic.start();
+    }
     
     // *exp3_pre_bg* updates
     if (t >= 0.0 && exp3_pre_bg.status === PsychoJS.Status.NOT_STARTED) {
@@ -853,6 +869,7 @@ function exp3_preRoutineEachFrame() {
 }
 
 
+var thisFilename;
 function exp3_preRoutineEnd(snapshot) {
   return async function () {
     //--- Ending Routine 'exp3_pre' ---
@@ -861,6 +878,25 @@ function exp3_preRoutineEnd(snapshot) {
         thisComponent.setAutoDraw(false);
       }
     }
+    // stop the microphone (make the audio data ready for upload)
+    await mic.stop();
+    
+    // construct a filename for this recording
+    thisFilename = 'recording_' +
+                    expName + "_" +
+                    expInfo["participant"] + "_" +
+                    "item_" + String(exp3_main_stimuli) +
+                    '_' + String(Date.now()); // add epoch timestamp so no overwriting
+    
+    // get the recording
+    mic.lastClip = await mic.getRecording({
+      tag: thisFilename,
+      flush: false
+    });
+    
+    psychoJS.experiment.addData('mic.clip', thisFilename + ".wav");
+    // start the asynchronous upload to the server
+    mic.lastClip.upload();
     psychoJS.experiment.addData('exp3_pre.stopped', globalClock.getTime());
     psychoJS.experiment.addData('next_page.numClicks', next_page.numClicks);
     psychoJS.experiment.addData('next_page.timesOn', next_page.timesOn);
