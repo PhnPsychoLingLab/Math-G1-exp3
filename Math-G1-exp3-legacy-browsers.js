@@ -38,9 +38,6 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 // flowScheduler gets run if the participants presses OK
 flowScheduler.add(updateInfo); // add timeStamp
 flowScheduler.add(experimentInit);
-flowScheduler.add(loadingRoutineBegin());
-flowScheduler.add(loadingRoutineEachFrame());
-flowScheduler.add(loadingRoutineEnd());
 flowScheduler.add(helloRoutineBegin());
 flowScheduler.add(helloRoutineEachFrame());
 flowScheduler.add(helloRoutineEnd());
@@ -110,8 +107,6 @@ async function updateInfo() {
 }
 
 
-var loadingClock;
-var text;
 var helloClock;
 var hello_np;
 var hello_bg;
@@ -129,20 +124,6 @@ var wait;
 var globalClock;
 var routineTimer;
 async function experimentInit() {
-  // Initialize components for Routine "loading"
-  loadingClock = new util.Clock();
-  text = new visual.TextStim({
-    win: psychoJS.window,
-    name: 'text',
-    text: mic_perms_text_string,
-    font: 'Noto Sans',
-    units: undefined, 
-    pos: [0, 0], draggable: false, height: 0.05,  wrapWidth: undefined, ori: 0.0,
-    languageStyle: 'LTR',
-    color: new util.Color('white'),  opacity: undefined,
-    depth: -1.0 
-  });
-  
   // Initialize components for Routine "hello"
   helloClock = new util.Clock();
   hello_np = new visual.ButtonStim({
@@ -220,7 +201,7 @@ async function experimentInit() {
     size : [1.344, 0.756],
     color : new util.Color([1,1,1]), opacity : undefined,
     flipHoriz : false, flipVert : false,
-    texRes : 128.0, interpolate : true, depth : -1.0 
+    texRes : 128.0, interpolate : true, depth : 0.0 
   });
   next_page = new visual.ButtonStim({
     win: psychoJS.window,
@@ -235,7 +216,7 @@ async function experimentInit() {
     size: [0.3, 0.3],
     ori: 0.0
     ,
-    depth: -2
+    depth: -1
   });
   next_page.clock = new util.Clock();
   
@@ -252,60 +233,10 @@ async function experimentInit() {
     size : [1.344, 0.756],
     color : new util.Color([1,1,1]), opacity : undefined,
     flipHoriz : false, flipVert : false,
-    texRes : 128.0, interpolate : true, depth : -1.0 
+    texRes : 128.0, interpolate : true, depth : 0.0 
   });
   // Initialize components for Routine "exit"
   exitClock = new util.Clock();
-  // 在exit階段的code元件中（Begin Routine）
-  // 處理最後一次可能的錄音
-  try {
-    if (window.mediaRecorder && window.mediaRecorder.state !== 'inactive') {
-      window.mediaRecorder.stop();
-      console.log("停止最終錄音");
-      
-      setTimeout(async function() {
-        if (window.audioChunks && window.audioChunks.length > 0) {
-          const audioBlob = new Blob(window.audioChunks, { type: 'audio/webm' });
-          const finalFilename = 'recording_' + 
-            expName + "_" + 
-            expInfo["participant"] + "_" + 
-            "final_" + Date.now() + ".webm";
-          
-          psychoJS.experiment.addData('final_audio_filename', finalFilename);
-          
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = function() {
-            const base64Data = reader.result.split(',')[1];
-            
-            fetch('https://pipe.jspsych.org/api/data', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Accept: '*/*',
-              },
-              body: JSON.stringify({
-                experimentID: 'zqejJsvNSVAI',
-                filename: finalFilename,
-                data: base64Data,
-                datatype: 'audio/webm'
-              }),
-            })
-            .then(response => response.json())
-            .then(data => {
-              console.log('最終音訊上傳成功:', data);
-            })
-            .catch(error => {
-              console.error('最終音訊上傳失敗:', error);
-            });
-          };
-        }
-      }, 100);
-    }
-  } catch (finalAudioError) {
-    console.error("處理最終錄音時出錯:", finalAudioError);
-  }
-  
   // 禁用瀏覽器下載結果
   psychoJS._saveResults = 0; 
   
@@ -319,11 +250,10 @@ async function experimentInit() {
   
   // 檢查是否有有效數據
   if (!dataObj || dataObj.length === 0) {
-    console.error('警告：未找到實驗數據');
+    console.warn('警告：未找到實驗數據，創建基本數據對象');
     dataObj = [{
       experiment: psychoJS._experiment._experimentName,
       participant: psychoJS._experiment._participant,
-      session: psychoJS._experiment._session,
       datetime: psychoJS._experiment._datetime
     }];
   }
@@ -342,7 +272,7 @@ async function experimentInit() {
           Accept: '*/*',
       },
       body: JSON.stringify({
-          experimentID: 'zqejJsvNSVAI',
+          experimentID: 'zqejJsvNSVAI', // 您的DataPipe實驗ID
           filename: filename,
           data: data,
       }),
@@ -376,152 +306,6 @@ async function experimentInit() {
 var t;
 var frameN;
 var continueRoutine;
-var loadingMaxDurationReached;
-var mic_perms_text_string;
-var loadingMaxDuration;
-var loadingComponents;
-function loadingRoutineBegin(snapshot) {
-  return async function () {
-    TrialHandler.fromSnapshot(snapshot); // ensure that .thisN vals are up to date
-    
-    //--- Prepare to start Routine 'loading' ---
-    t = 0;
-    frameN = -1;
-    continueRoutine = true; // until we're told otherwise
-    loadingClock.reset(routineTimer.getTime());
-    routineTimer.add(1.000000);
-    loadingMaxDurationReached = false;
-    // update component parameters for each repeat
-    // 在loading階段的code元件中（Begin Routine）
-    mic_perms_text_string = "正在獲取麥克風權限，請稍候...";
-    let micStream = null;
-    
-    // 如果瀏覽器支持getUserMedia()
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      console.log("瀏覽器支持getUserMedia");
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: true,
-          video: false,
-        })
-        .then((stream) => {
-          console.log("麥克風權限已授予");
-          micStream = stream;
-          // 全局保存流，供後續使用
-          window.microphoneStream = stream;
-          // 自動進入下一階段
-          continueRoutine = false;
-        })
-        .catch((err) => {
-          console.error(`獲取麥克風權限時發生錯誤: ${err}`);
-          mic_perms_text_string = "麥克風訪問被拒絕。請刷新頁面並授予麥克風權限。";
-          setTimeout(() => {
-            continueRoutine = false;
-          }, 5000);
-        });
-    } else {
-      console.log("不支持getUserMedia");
-      mic_perms_text_string = "您的瀏覽器不支持錄音功能。請使用Chrome或Firefox嘗試。";
-      setTimeout(() => {
-        continueRoutine = false;
-      }, 5000);
-    }
-    
-    // 確保10秒後無論如何都繼續
-    setTimeout(() => {
-      if (continueRoutine) {
-        console.log("權限請求超時，強制繼續");
-        continueRoutine = false;
-      }
-    }, 10000);
-    psychoJS.experiment.addData('loading.started', globalClock.getTime());
-    loadingMaxDuration = null
-    // keep track of which components have finished
-    loadingComponents = [];
-    loadingComponents.push(text);
-    
-    loadingComponents.forEach( function(thisComponent) {
-      if ('status' in thisComponent)
-        thisComponent.status = PsychoJS.Status.NOT_STARTED;
-       });
-    return Scheduler.Event.NEXT;
-  }
-}
-
-
-var frameRemains;
-function loadingRoutineEachFrame() {
-  return async function () {
-    //--- Loop for each frame of Routine 'loading' ---
-    // get current time
-    t = loadingClock.getTime();
-    frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
-    // update/draw components on each frame
-    
-    // *text* updates
-    if (t >= 0.0 && text.status === PsychoJS.Status.NOT_STARTED) {
-      // keep track of start time/frame for later
-      text.tStart = t;  // (not accounting for frame time here)
-      text.frameNStart = frameN;  // exact frame index
-      
-      text.setAutoDraw(true);
-    }
-    
-    frameRemains = 0.0 + 1.0 - psychoJS.window.monitorFramePeriod * 0.75;// most of one frame period left
-    if (text.status === PsychoJS.Status.STARTED && t >= frameRemains) {
-      text.setAutoDraw(false);
-    }
-    
-    // check for quit (typically the Esc key)
-    if (psychoJS.experiment.experimentEnded || psychoJS.eventManager.getKeys({keyList:['escape']}).length > 0) {
-      return quitPsychoJS('The [Escape] key was pressed. Goodbye!', false);
-    }
-    
-    // check if the Routine should terminate
-    if (!continueRoutine) {  // a component has requested a forced-end of Routine
-      return Scheduler.Event.NEXT;
-    }
-    
-    continueRoutine = false;  // reverts to True if at least one component still running
-    loadingComponents.forEach( function(thisComponent) {
-      if ('status' in thisComponent && thisComponent.status !== PsychoJS.Status.FINISHED) {
-        continueRoutine = true;
-      }
-    });
-    
-    // refresh the screen if continuing
-    if (continueRoutine && routineTimer.getTime() > 0) {
-      return Scheduler.Event.FLIP_REPEAT;
-    } else {
-      return Scheduler.Event.NEXT;
-    }
-  };
-}
-
-
-function loadingRoutineEnd(snapshot) {
-  return async function () {
-    //--- Ending Routine 'loading' ---
-    loadingComponents.forEach( function(thisComponent) {
-      if (typeof thisComponent.setAutoDraw === 'function') {
-        thisComponent.setAutoDraw(false);
-      }
-    });
-    psychoJS.experiment.addData('loading.stopped', globalClock.getTime());
-    if (loadingMaxDurationReached) {
-        loadingClock.add(loadingMaxDuration);
-    } else {
-        loadingClock.add(1.000000);
-    }
-    // Routines running outside a loop should always advance the datafile row
-    if (currentLoop === psychoJS.experiment) {
-      psychoJS.experiment.nextEntry(snapshot);
-    }
-    return Scheduler.Event.NEXT;
-  }
-}
-
-
 var helloMaxDurationReached;
 var helloMaxDuration;
 var helloComponents;
@@ -884,34 +668,6 @@ function exp3_preRoutineBegin(snapshot) {
     routineTimer.reset();
     exp3_preMaxDurationReached = false;
     // update component parameters for each repeat
-    window.audioChunks = [];
-    window.mediaRecorder = null;
-    
-    try {
-      if (window.microphoneStream) {
-        // 使用原生MediaRecorder
-        window.mediaRecorder = new MediaRecorder(window.microphoneStream);
-        
-        window.mediaRecorder.ondataavailable = function(e) {
-          if (e.data.size > 0) {
-            window.audioChunks.push(e.data);
-          }
-        };
-        
-        // 開始錄音
-        window.mediaRecorder.start();
-        console.log("開始錄音 (MediaRecorder)");
-        
-        // 將錄音狀態保存到實驗數據
-        psychoJS.experiment.addData('recording_started', true);
-      } else {
-        console.error("麥克風流未初始化，無法錄音");
-        psychoJS.experiment.addData('recording_started', false);
-      }
-    } catch (error) {
-      console.error("初始化錄音時出錯:", error);
-      psychoJS.experiment.addData('recording_error', error.toString());
-    }
     exp3_pre_bg.setImage(exp3_pre_stimuli);
     // reset next_page to account for continued clicks & clear times on/off
     next_page.reset()
@@ -1053,94 +809,6 @@ function nextQRoutineBegin(snapshot) {
     routineTimer.add(0.500000);
     nextQMaxDurationReached = false;
     // update component parameters for each repeat
-    try {
-      if (window.mediaRecorder && window.mediaRecorder.state !== 'inactive') {
-        // 停止錄音
-        window.mediaRecorder.stop();
-        console.log("停止錄音 (MediaRecorder)");
-        
-        // 等待100ms確保最後的數據被收集
-        setTimeout(async function() {
-          try {
-            if (window.audioChunks && window.audioChunks.length > 0) {
-              // 創建Blob
-              const audioBlob = new Blob(window.audioChunks, { type: 'audio/webm' });
-              
-              // 創建文件名
-              const trialNum = psychoJS.experiment.thisN || 0;
-              const thisFilename = 'recording_' + 
-                expName + "_" + 
-                expInfo["participant"] + "_" + 
-                "trial_" + trialNum + "_" + 
-                Date.now() + ".webm";
-              
-              // 將文件名添加到實驗數據
-              psychoJS.experiment.addData('audio_filename', thisFilename);
-              
-              // 轉換為base64
-              const reader = new FileReader();
-              reader.readAsDataURL(audioBlob);
-              reader.onloadend = function() {
-                // 提取base64數據
-                const base64Data = reader.result.split(',')[1];
-                
-                // 上傳到OSF
-                console.log('上傳音訊到OSF...');
-                fetch('https://pipe.jspsych.org/api/data', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Accept: '*/*',
-                  },
-                  body: JSON.stringify({
-                    experimentID: 'zqejJsvNSVAI', // 您的DataPipe ID
-                    filename: thisFilename,
-                    data: base64Data,
-                    datatype: 'audio/webm'
-                  }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                  console.log('音訊上傳成功:', data);
-                  psychoJS.experiment.addData('audio_upload_success', true);
-                })
-                .catch(error => {
-                  console.error('音訊上傳失敗:', error);
-                  psychoJS.experiment.addData('audio_upload_error', error.toString());
-                });
-              };
-              
-              // 重置音訊塊，準備下一次錄音
-              window.audioChunks = [];
-              
-              // 為下一次錄音重新啟動MediaRecorder
-              if (window.microphoneStream) {
-                window.mediaRecorder = new MediaRecorder(window.microphoneStream);
-                window.mediaRecorder.ondataavailable = function(e) {
-                  if (e.data.size > 0) {
-                    window.audioChunks.push(e.data);
-                  }
-                };
-                window.mediaRecorder.start();
-                console.log("為下一試次重新開始錄音");
-              }
-            } else {
-              console.warn("沒有收集到音訊數據");
-              psychoJS.experiment.addData('audio_data_collected', false);
-            }
-          } catch (processError) {
-            console.error("處理音訊時出錯:", processError);
-            psychoJS.experiment.addData('audio_processing_error', processError.toString());
-          }
-        }, 100);
-      } else {
-        console.warn("MediaRecorder不存在或未啟動");
-        psychoJS.experiment.addData('mediarecorder_status', 'not_active');
-      }
-    } catch (error) {
-      console.error("處理錄音時出錯:", error);
-      psychoJS.experiment.addData('audio_stop_error', error.toString());
-    }
     psychoJS.experiment.addData('nextQ.started', globalClock.getTime());
     nextQMaxDuration = null
     // keep track of which components have finished
@@ -1156,6 +824,7 @@ function nextQRoutineBegin(snapshot) {
 }
 
 
+var frameRemains;
 function nextQRoutineEachFrame() {
   return async function () {
     //--- Loop for each frame of Routine 'nextQ' ---
